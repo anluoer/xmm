@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+
+        }
+
+        #container {
+            height: 730px;
+            width: 1280px;
+            background: url(./img/bg.jpg) center center no-repeat;
+            /* background-size:contain; */
+            margin: 0 auto;
+            position: relative;
+        }
+
+        #control-panel {
+            float: right;
+            left: 830px;
+            top: 100px;
+            position: absolute;
+        }
+
+        button {
+            width: 200px;
+            height: 50px;
+            display: block;
+            margin-bottom: 50px;
+        }
+
+        #map-panel {
+            width: 631px;
+            height: 421px;
+            position: absolute;
+            left: 90px;
+            top: 150px;
+        }
+
+        #map-table {
+            /* border-top:1px solid #888;
+            border-left:1px solid #888 */
+            border-collapse: collapse;
+        }
+
+        #map-table td {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #888;
+            /* border-width:0 1px 1px 0;
+            border-style:solid;
+            border-color: #888;   */
+        }
+
+        .block {
+            width: 20px;
+            height: 20px;
+            position: absolute
+        }
+
+        .snake {
+            background: blue;
+            top: 64px;
+        }
+
+        .produce {
+            background-color: chartreuse;
+        }
+        #alert{
+            width:200px;
+            height:200px;
+            position:absolute;
+            left:50%;
+            top:50%;
+            margin-left: -100px;
+            margin-top: -100px;
+            display:none;
+            background-color:gray;
+            
+        }
+        #alert-head{
+            height:30px;
+            background-color: gainsboro;
+        }
+        #alert-head-close{
+           float:right;
+           cursor: pointer;
+            
+        }
+        
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <div id="map-panel">
+            <table id="map-table" cellspacing="0"></table>
+        </div>
+        <div id="control-panel">
+            <button id="btn-start" @click=>开始游戏</button>
+            <button id="btn-set">游戏设置</button>
+            <button id="btn">退出游戏</button>
+            <button id="btn">帮助</button>
+            <button id="speed">速度</button>
+        </div>
+        <div id="alert">
+            <div id='alert-head'>
+                <div id="alert-head-close">[x]</div>
+            </div>
+            <div id="alert-content">Game over</div>
+        </div>
+    </div>
+    <script>
+        oMapTable = document.getElementById('map-table')
+        oMapPanel = document.getElementById('map-panel')
+        oBtnStart = document.getElementById('btn-start')
+        oAlert=document.getElementById('alert')
+        oAlertClose=document.getElementById('alert-head-close')
+        var snake = [];
+        var timer = false;
+        var oFood
+        //初始化地图
+        for (var row = 0; row < 20; row++) {
+            var oTr = document.createElement('tr')
+            for (var col = 0; col < 30; col++) {
+                var oTd = document.createElement('td')
+                oTr.appendChild(oTd)
+            }
+            oMapTable.appendChild(oTr)
+        }
+        //初始化蛇
+
+        for (var i = 2; i >= 0; i--) {
+            var oDiv = document.createElement('div')
+            oDiv.className = "block snake";
+            oMapPanel.appendChild(oDiv)
+            oDiv.style.left = 21 * i + 1 + 'px';
+            oDiv.pos = {
+                left: 21 * i + 1,
+                top: 64
+
+            }
+            snake.push(oDiv)
+
+        }
+        console.log(snake)
+        //初始化食物
+        function produce() {
+            do {
+                flag = true;
+                oFood = document.createElement('div')
+                var ranleft = parseInt(Math.random() * 30);
+                var rantop = parseInt(Math.random() * 20);
+                oFood.style.left = ranleft * 21 + 1 + 'px';
+                oFood.style.top = rantop * 21 + 1 + 'px';
+                oFood.className = "block produce"
+                oMapPanel.appendChild(oFood)
+                oFood.pos = {
+                    left: 21 * ranleft + 1,
+                    top: 21 * rantop + 1
+                }
+                for (var i = 0; i < snake.length; i++) {
+                    if (snake[i].offsetLeft == oFood.offsetLeft && snake[i].offsetTop == oFood.offsetTop) {
+                        flag = false;
+                    }
+                }
+            } while (!flag)
+            //食物不能和蛇重合，食物不能出界
+            //先生成一个食物，判断食物是否是有效，无效是继续生成
+        }
+        produce()
+        //蛇向右移动，头先往前移动，身体部分的位置是前一部分的位置
+        var snakeHead = snake[0];
+        var direction = 'right'
+        //点击开始游戏
+        oBtnStart.onclick = function () {
+            //点击开始游戏后避免多次点击开启多个计时器导致蛇移动加速，加上！timer这个条件
+            if (!timer) {
+                timer = setInterval(function () {
+                    snakeMove()
+                }, 300)
+            }
+        }
+        //蛇每300ms移动一次
+        //蛇移动
+        function snakeMove() {
+            if (direction == 'right') {
+                snakeHead.style.left = snakeHead.offsetLeft + 21 + 'px';
+            }
+            if (direction == 'down') {
+                snakeHead.style.top = snakeHead.offsetTop + 21 + 'px';
+            }
+            if (direction == 'left') {
+                snakeHead.style.left = snakeHead.offsetLeft - 21 + 'px';
+            }
+            if (direction == 'up') {
+                snakeHead.style.top = snakeHead.offsetTop - 21 + 'px';
+            }
+            //蛇吃到食物的时候食物后面的身体部分不向前移动，不吃食物的时候才向前移动
+            //蛇吃到食物后给食物定位，不然食物和蛇头重合
+            if (snakeHead.offsetLeft == oFood.offsetLeft && snakeHead.offsetTop == oFood.offsetTop) {
+                oFood.className = "block snake";
+                oFood.style.left = snakeHead.pos.left+'px';
+                oFood.style.top = snakeHead.pos.top+'px';
+                //应该让蛇头移动后再插入食物
+                snake.splice(1, 0, oFood);//splice中第一个参数是添加或删除元素的位置
+                produce()
+            }
+            else {
+                //蛇身的每一节移到前一节的位置，i从1开始
+                for (var i = 1; i < snake.length; i++) {
+                    snake[i].style.left = snake[i - 1].pos.left + 'px';
+                    snake[i].style.top = snake[i - 1].pos.top + 'px';
+                }
+                //offsetLeft是获取元素当前的位置
+                //怎么把蛇移动前的位置记录下来 在蛇初始化的时候将蛇身的每一个小div的left和top记录下来
+                //怎么更新pos中的值 将蛇身循环，把pos的值改成当前位置
+            } 
+            for (var i = 0; i < snake.length; i++) {
+                    snake[i].pos.left = snake[i].offsetLeft;
+                    snake[i].pos.top = snake[i].offsetTop
+
+                }
+            //蛇不能运动出边界，不能吃自己
+            if(snakeHead.offsetLeft==-20||snakeHead.offsetLeft==631||snakeHead.offsetTop==-20||snakeHead.offsetTop==421){
+                // alert('Game over')
+                oAlert.style.display='block';
+                clearInterval(timer)
+            }
+            for(var i = 4; i < snake.length; i++){
+               if( snake[i].offsetLeft==snakeHead.offsetLeft&&snake[i].offsetTop==snakeHead.offsetTop){
+                //    alert('大傻子')
+                   oAlert.style.display='block';
+                   clearInterval(timer)
+               }
+            }
+
+
+        }
+
+        document.onkeydown = function (e) {
+            e = e || e.event;
+            key = e.which || e.keyCode;
+            if (key == 38 && direction != 'down') {
+                direction = 'up'
+            }
+            else if (key == 39 && direction != 'left') {
+                direction = 'right'
+            }
+            else if (key == 40 && direction != 'up') {
+                direction = 'down'
+            }
+            else if (key == 37 && direction != 'right') {
+                direction = 'left'
+            }
+            snakeMove()
+        }
+        //蛇吃食物
+       // 蛇头的位置与食物位置重合时让食物的颜色变成蛇身的颜色
+       //食物如何进到蛇身
+        oAlertClose.onclick=function(){
+            oAlert.style.display='none';
+        }
+
+
+
+
+
+    </script>
+</body>
+
+</html>
